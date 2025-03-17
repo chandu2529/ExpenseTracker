@@ -15,7 +15,7 @@
 
         public override string ToString()
         {
-            return $"{Date.ToShortDateString()} | {Category} | {Amount}";
+            return $"{Date.ToString("yyyy-MM-dd HH:mm:ss")} | {Category} | {Amount}";
         }
     }
 }

@@ -1,6 +1,4 @@
-﻿using System.Net.NetworkInformation;
-
-namespace ExpenseTracker
+﻿namespace ExpenseTracker
 {
     class Program
     {
@@ -18,7 +16,7 @@ namespace ExpenseTracker
                 Console.WriteLine("3. View Total Expenses");
                 Console.WriteLine("4. View Category Totals");
                 Console.WriteLine("5. Delete the Expense");
-                Console.WriteLine("6. Filter bny Date");
+                Console.WriteLine("6. Filter by Date");
                 Console.WriteLine("7. Exit");
                 Console.Write("Choose an option: ");
 
@@ -148,9 +146,17 @@ namespace ExpenseTracker
             Console.Write("Enter the number of the expense to delete");
             if (int.TryParse(Console.ReadLine() , out int index) && index >= 1 && index <= expenses.Count)
             {
-                expenses.RemoveAt(index-1);
-                SaveExpenses();
-                Console.WriteLine("Expense Deleted Successfully");
+                expenses.RemoveAt(index - 1);
+                try
+                {
+                    SaveExpenses();
+                    Console.WriteLine("Expense Deleted Successfully");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to save changes: {ex.Message}");
+                }
+                
             }
             else
             {
@@ -166,7 +172,7 @@ namespace ExpenseTracker
                 Console.WriteLine("No expenses to Filter");
             }
 
-            Console.WriteLine("Enter date to filter (yyyy-MM-dd): ");
+            Console.Write("Enter date to filter (yyyy-MM-dd): ");
             if (DateTime.TryParse(Console.ReadLine(), out DateTime filterDate))
             {
                 Console.WriteLine($"\nExpenses for {filterDate.ToShortDateString()}");
@@ -198,7 +204,7 @@ namespace ExpenseTracker
             {
                 foreach (Expense exp in expenses)
                 {
-                    writer.WriteLine($"{exp.Date.ToString("yyyy-MM-dd")},{exp.Category},{exp.Amount}");
+                    writer.WriteLine($"{exp.Date.ToString("yyyy-MM-dd HH:mm:ss")},{exp.Category},{exp.Amount}");
                 }
             }
             Console.WriteLine("Expenses saved to file.");
