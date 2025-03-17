@@ -1,0 +1,226 @@
+﻿using System.Net.NetworkInformation;
+
+namespace ExpenseTracker
+{
+    class Program
+    {
+        static List<Expense> expenses = new List<Expense>(); 
+
+        static void Main(string[] args)
+        {
+            LoadExpenses();
+            bool running = true;
+            while (running)
+            {
+                Console.WriteLine("\nPersonal Expense Tracker");
+                Console.WriteLine("1. Add Expense");
+                Console.WriteLine("2. View All Expenses");
+                Console.WriteLine("3. View Total Expenses");
+                Console.WriteLine("4. View Category Totals");
+                Console.WriteLine("5. Delete the Expense");
+                Console.WriteLine("6. Filter bny Date");
+                Console.WriteLine("7. Exit");
+                Console.Write("Choose an option: ");
+
+                string choice = Console.ReadLine();
+
+                switch (choice)
+                {
+                    case "1":
+                        AddExpense();
+                        break;
+                    case "2":
+                        ViewExpenses();
+                        break;
+                    case "3":
+                        ViewTotal();
+                        break;
+                    case "4":
+                        ViewCategoryTotals();
+                        break;
+                    case "5":
+                        DeleteExpense();
+                        break;
+                    case "6":
+                        FilterByDate();
+                        break;
+                    case "7":
+                        SaveExpenses();
+                        running = false;
+                        Console.WriteLine("GoodBye!");
+                        break;
+                    default:
+                        Console.WriteLine("Invalid option, try again.");
+                        break;
+                }
+            }
+        }
+
+        static void AddExpense()
+        {
+            Console.Write("Enter amount: $");
+            decimal amount = Convert.ToDecimal(Console.ReadLine());
+
+            Console.Write("Enter category (e.g., Food, Travel): ");
+            string category = Console.ReadLine();
+
+            Console.Write("Enter date (yyyy-MM-dd, or press Enter for today): ");
+            string dateInput = Console.ReadLine();
+            DateTime date = string.IsNullOrEmpty(dateInput) ? DateTime.Now : DateTime.Parse(dateInput); 
+
+            Expense expense = new Expense(amount, category, date);
+            expenses.Add(expense);
+            Console.WriteLine("Expense added successfully!");
+        }
+
+        static void ViewExpenses()
+        {
+            if (expenses.Count == 0)
+            {
+                Console.WriteLine("No expenses recorded yet.");
+                return;
+            }
+
+            Console.WriteLine("\nAll Expenses:");
+            foreach (Expense exp in expenses)
+            {
+                Console.WriteLine(exp);
+            }
+        }
+
+        static void ViewTotal()
+        {
+            if (expenses.Count == 0)
+            {
+                Console.WriteLine("No expenses to total.");
+                return;
+            }
+
+            decimal total = 0;
+            foreach (Expense exp in expenses)
+            {
+                total += exp.Amount;
+            }
+            Console.WriteLine($"\nTotal Expenses: ${total}");
+        }
+
+        static void ViewCategoryTotals()
+        {
+            if (expenses.Count == 0)
+            {
+                Console.WriteLine("No expenses to summarize.");
+                return;
+            }
+            
+            Dictionary<string , decimal> CategoryTotals = new Dictionary<string , decimal>();
+
+            foreach (Expense exp in expenses)
+            {
+                if (CategoryTotals.ContainsKey(exp.Category))
+                {
+                    CategoryTotals[exp.Category] += exp.Amount;
+                }
+                else
+                {
+                    CategoryTotals[exp.Category] = exp.Amount;
+                }
+            }
+            Console.WriteLine("\nExpenses by Category");
+            foreach (var pair in  CategoryTotals)
+            {
+                Console.WriteLine($"{pair.Key} : ${pair.Value}");
+            }
+        }
+
+        static void DeleteExpense()
+        {
+            if (expenses.Count == 0)
+            {
+                Console.WriteLine("No expenses to Delete.");
+                return;
+            }
+
+            Console.WriteLine("\nSelect an expense to delete:");
+            for (int i = 0; i < expenses.Count; i++)
+            {
+                Console.WriteLine($"{i+1}. {expenses[i]}");
+            }
+            Console.Write("Enter the number of the expense to delete");
+            if (int.TryParse(Console.ReadLine() , out int index) && index >= 1 && index <= expenses.Count)
+            {
+                expenses.RemoveAt(index-1);
+                SaveExpenses();
+                Console.WriteLine("Expense Deleted Successfully");
+            }
+            else
+            {
+                Console.WriteLine("Invalid selection, nothing deleted.");
+            }
+
+        }
+
+        static void FilterByDate()
+        {
+            if (expenses.Count == 0)
+            {
+                Console.WriteLine("No expenses to Filter");
+            }
+
+            Console.WriteLine("Enter date to filter (yyyy-MM-dd): ");
+            if (DateTime.TryParse(Console.ReadLine(), out DateTime filterDate))
+            {
+                Console.WriteLine($"\nExpenses for {filterDate.ToShortDateString()}");
+                bool found = false;
+                foreach (Expense exp in expenses)
+                {
+                    if (exp.Date.Date == filterDate.Date)
+                    {
+                        Console.WriteLine(exp);
+                        found = true;
+                    }
+                }
+                if (!found)
+                {
+                    Console.WriteLine("No expenses found for that date.");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Invalid date format. Use yyyy-MM-dd (e.g., 2025-03-17).");
+            }
+
+        }
+
+        static void SaveExpenses()
+        {
+            string FilePath = "expenses.txt";
+            using (StreamWriter writer = new StreamWriter(FilePath))
+            {
+                foreach (Expense exp in expenses)
+                {
+                    writer.WriteLine($"{exp.Date.ToString("yyyy-MM-dd")},{exp.Category},{exp.Amount}");
+                }
+            }
+            Console.WriteLine("Expenses saved to file.");
+        }
+
+        static void LoadExpenses()
+        {
+            string FilePath = "expenses.txt";
+            if (File.Exists(FilePath))
+            {
+                expenses.Clear();
+                string[] lines = File.ReadAllLines(FilePath);
+                foreach (var  line in lines)
+                {
+                    string[] parts = line.Split(',');
+                    DateTime date = DateTime.Parse(parts[0]);
+                    string category = parts[1];
+                    decimal amount = decimal.Parse(parts[2]);
+                    expenses.Add(new Expense(amount , category , date));
+                }
+                Console.WriteLine("Expenses loaded from file.");
+            }
+        }
+    }
+}
