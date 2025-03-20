@@ -76,10 +76,14 @@
 
             Console.Write("Enter date (yyyy-MM-dd, or press Enter for today): ");
             string dateInput = Console.ReadLine();
-            DateTime date = string.IsNullOrEmpty(dateInput) ? DateTime.Now : DateTime.Parse(dateInput); 
+            DateTime date = string.IsNullOrEmpty(dateInput) ? DateTime.Now : DateTime.Parse(dateInput);
 
-            Expense expense = new Expense(amount, category, date);
+            Console.Write("Enter Descrition (optional, press Enter to skip): ");
+            string description = Console.ReadLine();
+
+            Expense expense = new Expense(amount, category, date , description);
             expenses.Add(expense);
+            SaveExpenses();
             Console.WriteLine("Expense added successfully!");
         }
 
@@ -91,8 +95,33 @@
                 return;
             }
 
+            Console.WriteLine("\nSort by: ");
+            Console.WriteLine("1. Date");
+            Console.WriteLine("2. Amount");
+            Console.WriteLine("3. Category");
+            Console.Write("Choose an option (1-3, or press Enter for no sorting): ");
+
+            string sortChoice = Console.ReadLine();
+
+            List<Expense> sortedExpenses = new List<Expense>(expenses);
+
+            switch (sortChoice)
+            {
+                case "1":
+                    sortedExpenses.Sort((a, b) => a.Date.CompareTo(b.Date));
+                    break;
+                case "2":
+                    sortedExpenses.Sort((a, b) => a.Amount.CompareTo(b.Amount));
+                    break;
+                case "3":
+                    sortedExpenses.Sort((a, b) => a.Category.CompareTo(b.Category));
+                    break;
+                default:
+                    break;  
+            }
+
             Console.WriteLine("\nAll Expenses:");
-            foreach (Expense exp in expenses)
+            foreach (Expense exp in sortedExpenses)
             {
                 Console.WriteLine(exp);
             }
@@ -238,7 +267,11 @@
                 string dateInput = Console.ReadLine();
                 DateTime date = string.IsNullOrEmpty(dateInput) ? exp.Date : DateTime.Parse(dateInput);
 
-                expenses[index - 1] = new Expense(amount, category, date);
+                Console.Write($"New Description (Current: {exp.Description} , press enter to keep): ");
+                string descriptionInput = Console.ReadLine();
+                string description = string.IsNullOrEmpty(descriptionInput) ? exp.Description : descriptionInput;
+
+                expenses[index - 1] = new Expense(amount, category, date, description);
 
                 try
                 {
@@ -315,10 +348,10 @@
             {
                 foreach (Expense exp in expenses)
                 {
-                    writer.WriteLine($"{exp.Date.ToString("yyyy-MM-dd HH:mm:ss")},{exp.Category},{exp.Amount}");
+                    writer.WriteLine($"{exp.Date.ToString("yyyy-MM-dd HH:mm:ss")},{exp.Category},{exp.Amount},{exp.Description}");
                 }
             }
-            Console.WriteLine("Expenses saved to file.");
+            Console.WriteLine("Expenses saved to file.");   
         }
 
         static void LoadExpenses()
@@ -331,10 +364,12 @@
                 foreach (var  line in lines)
                 {
                     string[] parts = line.Split(',');
+
                     DateTime date = DateTime.Parse(parts[0]);
                     string category = parts[1];
                     decimal amount = decimal.Parse(parts[2]);
-                    expenses.Add(new Expense(amount , category , date));
+                    string description = parts[3];
+                    expenses.Add(new Expense(amount , category , date , description));
                 }
                 Console.WriteLine("Expenses loaded from file.");
             }
